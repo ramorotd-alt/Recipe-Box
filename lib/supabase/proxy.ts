@@ -31,7 +31,25 @@ export async function updateSession(request: NextRequest) {
   );
 
   // Refresh the auth token. Do not add logic between createServerClient and getClaims().
-  await supabase.auth.getClaims();
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims;
+  const path = request.nextUrl.pathname;
+
+  if (user && (path === "/login" || path === "/signup")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/";
+    const redirectResponse = NextResponse.redirect(url);
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie);
+    });
+    for (const header of ["cache-control", "expires", "pragma"]) {
+      const value = supabaseResponse.headers.get(header);
+      if (value) {
+        redirectResponse.headers.set(header, value);
+      }
+    }
+    return redirectResponse;
+  }
 
   return supabaseResponse;
 }
