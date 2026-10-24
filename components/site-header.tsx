@@ -17,12 +17,21 @@ export async function SiteHeader() {
   return (
     <header className="border-b border-border bg-card">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-        <Link href="/" className="font-serif text-xl tracking-tight">
+        <Link
+          href={user ? "/dashboard" : "/"}
+          className="font-serif text-xl tracking-tight"
+        >
           Recipe Box
         </Link>
         <nav className="flex items-center gap-2 text-sm">
           {user ? (
             <>
+              <Link
+                href="/dashboard"
+                className="rounded-full px-3 py-2 text-muted hover:text-foreground"
+              >
+                Dashboard
+              </Link>
               <span className="hidden max-w-40 truncate text-muted sm:inline">
                 {label}
               </span>

@@ -35,21 +35,36 @@ export async function updateSession(request: NextRequest) {
   const user = data?.claims;
   const path = request.nextUrl.pathname;
 
+  if (
+    !user &&
+    (path.startsWith("/dashboard") || path.startsWith("/recipes"))
+  ) {
+    return redirectWithSession(request, supabaseResponse, "/login");
+  }
+
   if (user && (path === "/login" || path === "/signup")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/";
-    const redirectResponse = NextResponse.redirect(url);
-    supabaseResponse.cookies.getAll().forEach((cookie) => {
-      redirectResponse.cookies.set(cookie);
-    });
-    for (const header of ["cache-control", "expires", "pragma"]) {
-      const value = supabaseResponse.headers.get(header);
-      if (value) {
-        redirectResponse.headers.set(header, value);
-      }
-    }
-    return redirectResponse;
+    return redirectWithSession(request, supabaseResponse, "/dashboard");
   }
 
   return supabaseResponse;
+}
+
+function redirectWithSession(
+  request: NextRequest,
+  supabaseResponse: NextResponse,
+  pathname: string,
+) {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
+  const redirectResponse = NextResponse.redirect(url);
+  supabaseResponse.cookies.getAll().forEach((cookie) => {
+    redirectResponse.cookies.set(cookie);
+  });
+  for (const header of ["cache-control", "expires", "pragma"]) {
+    const value = supabaseResponse.headers.get(header);
+    if (value) {
+      redirectResponse.headers.set(header, value);
+    }
+  }
+  return redirectResponse;
 }

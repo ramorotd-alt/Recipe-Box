@@ -36,7 +36,7 @@ export async function login(
     return { error: error.message, message: null };
   }
 
-  redirect("/");
+  redirect("/dashboard");
 }
 
 export async function signup(
@@ -70,7 +70,7 @@ export async function signup(
     password,
     options: {
       data: { full_name: fullName },
-      emailRedirectTo: `${origin}/auth/confirm?next=/`,
+      emailRedirectTo: `${origin}/auth/confirm?next=/dashboard`,
     },
   });
 
@@ -85,7 +85,7 @@ export async function signup(
     };
   }
 
-  redirect("/");
+  redirect("/dashboard");
 }
 
 export async function logout() {
@@ -145,5 +145,5 @@ export async function updatePassword(
     return { error: error.message, message: null };
   }
 
-  redirect("/");
+  redirect("/dashboard");
 }
