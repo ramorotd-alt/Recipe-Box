@@ -115,6 +115,11 @@ create policy "Profiles are viewable by everyone"
   to anon, authenticated
   using (true);
 
+create policy "Users can insert their own profile"
+  on public.profiles for insert
+  to authenticated
+  with check (id = auth.uid());
+
 create policy "Users can update their own profile"
   on public.profiles for update
   to authenticated

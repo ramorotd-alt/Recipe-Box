@@ -1,3 +1,4 @@
+import { ensureProfile } from "@/lib/supabase/ensure-profile";
 import { createClient } from "@/lib/supabase/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
@@ -14,6 +15,16 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.verifyOtp({ type, token_hash });
 
     if (!error) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        try {
+          await ensureProfile(supabase, user);
+        } catch {
+          // Session is valid; profile can be created on the next dashboard visit.
+        }
+      }
       redirect(next);
     }
 

@@ -1,5 +1,9 @@
 "use server";
 
+import {
+  ensureProfile,
+  profileErrorMessage,
+} from "@/lib/supabase/ensure-profile";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -31,6 +35,14 @@ export async function createRecipe(
     redirect("/login");
   }
 
+  try {
+    await ensureProfile(supabase, user);
+  } catch (profileError) {
+    return {
+      error: profileErrorMessage(profileError),
+    };
+  }
+
   const title = field(formData, "title");
   const description = field(formData, "description");
   const category = field(formData, "category");
@@ -55,20 +67,24 @@ export async function createRecipe(
     return { error: "Cooking time must be a number of minutes." };
   }
 
-  const { error } = await supabase.from("recipes").insert({
-    user_id: user.id,
-    title,
-    description: description || null,
-    category,
-    difficulty: difficulty || null,
-    cooking_time: cookingTime,
-    ingredients,
-    instructions,
-  });
+  const { data, error } = await supabase
+    .from("recipes")
+    .insert({
+      user_id: user.id,
+      title,
+      description: description || null,
+      category,
+      difficulty: difficulty || null,
+      cooking_time: cookingTime,
+      ingredients,
+      instructions,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     return { error: error.message };
   }
 
-  redirect("/dashboard");
+  redirect(`/recipes/${data.id}`);
 }

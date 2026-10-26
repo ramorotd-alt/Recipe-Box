@@ -1,5 +1,9 @@
 "use server";
 
+import {
+  ensureProfile,
+  profileErrorMessage,
+} from "@/lib/supabase/ensure-profile";
 import { createClient } from "@/lib/supabase/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -30,10 +34,24 @@ export async function login(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
   if (error) {
     return { error: error.message, message: null };
+  }
+
+  if (data.user) {
+    try {
+      await ensureProfile(supabase, data.user);
+    } catch (profileError) {
+      return {
+        error: profileErrorMessage(profileError),
+        message: null,
+      };
+    }
   }
 
   redirect("/dashboard");
@@ -78,10 +96,19 @@ export async function signup(
     return { error: error.message, message: null };
   }
 
-  if (!data.session) {
+  if (!data.session || !data.user) {
     return {
       error: null,
       message: "Check your email to confirm your account, then log in.",
+    };
+  }
+
+  try {
+    await ensureProfile(supabase, data.user);
+  } catch (profileError) {
+    return {
+      error: profileErrorMessage(profileError),
+      message: null,
     };
   }
 
