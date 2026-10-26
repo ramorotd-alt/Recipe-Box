@@ -2,6 +2,7 @@ export type Profile = {
   id: string;
   username: string;
   full_name: string;
+  bio: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -28,6 +29,7 @@ export type Database = {
           id: string;
           username: string;
           full_name: string;
+          bio?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -35,6 +37,7 @@ export type Database = {
           id?: string;
           username?: string;
           full_name?: string;
+          bio?: string | null;
           created_at?: string;
           updated_at?: string;
         };

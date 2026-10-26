@@ -8,12 +8,6 @@ export async function SiteHeader() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const label =
-    (typeof user?.user_metadata?.full_name === "string" &&
-      user.user_metadata.full_name) ||
-    user?.email ||
-    "Account";
-
   return (
     <header className="border-b border-border bg-card">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
@@ -32,9 +26,12 @@ export async function SiteHeader() {
               >
                 Dashboard
               </Link>
-              <span className="hidden max-w-40 truncate text-muted sm:inline">
-                {label}
-              </span>
+              <Link
+                href="/profile"
+                className="rounded-full px-3 py-2 text-muted hover:text-foreground"
+              >
+                Profile
+              </Link>
               <form action={logout}>
                 <button
                   type="submit"

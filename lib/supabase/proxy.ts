@@ -37,7 +37,9 @@ export async function updateSession(request: NextRequest) {
 
   if (
     !user &&
-    (path.startsWith("/dashboard") || path.startsWith("/recipes"))
+    (path.startsWith("/dashboard") ||
+      path.startsWith("/recipes") ||
+      path.startsWith("/profile"))
   ) {
     return redirectWithSession(request, supabaseResponse, "/login");
   }
