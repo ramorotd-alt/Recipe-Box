@@ -1,7 +1,11 @@
 "use client";
 
 import { useActionState } from "react";
-import { createRecipe, type RecipeFormState } from "@/app/actions/recipes";
+import {
+  createRecipe,
+  updateRecipe,
+  type RecipeFormState,
+} from "@/app/actions/recipes";
 
 const initialState: RecipeFormState = { error: null };
 
@@ -20,25 +24,54 @@ const CATEGORIES = [
   "Quick",
 ];
 
-export function RecipeForm() {
+export type RecipeFormValues = {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string;
+  difficulty: string | null;
+  cooking_time: number | null;
+  ingredients: string[];
+  instructions: string[];
+};
+
+export function RecipeForm({ recipe }: { recipe?: RecipeFormValues }) {
+  const isEdit = Boolean(recipe);
   const [state, formAction, pending] = useActionState(
-    createRecipe,
+    isEdit ? updateRecipe : createRecipe,
     initialState,
   );
+  const categories = recipe?.category && !CATEGORIES.includes(recipe.category)
+    ? [recipe.category, ...CATEGORIES]
+    : CATEGORIES;
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
+      {recipe ? (
+        <input type="hidden" name="recipeId" value={recipe.id} />
+      ) : null}
       <div className="flex flex-col gap-2">
         <label htmlFor="title" className="text-sm font-medium">
           Title
         </label>
-        <input id="title" name="title" required className={fieldClass} />
+        <input
+          id="title"
+          name="title"
+          required
+          defaultValue={recipe?.title}
+          className={fieldClass}
+        />
       </div>
       <div className="flex flex-col gap-2">
         <label htmlFor="description" className="text-sm font-medium">
           Description
         </label>
-        <textarea id="description" name="description" className={areaClass} />
+        <textarea
+          id="description"
+          name="description"
+          defaultValue={recipe?.description ?? ""}
+          className={areaClass}
+        />
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="flex flex-col gap-2">
@@ -49,10 +82,10 @@ export function RecipeForm() {
             id="category"
             name="category"
             required
-            defaultValue="Dinner"
+            defaultValue={recipe?.category ?? "Dinner"}
             className={fieldClass}
           >
-            {CATEGORIES.map((name) => (
+            {categories.map((name) => (
               <option key={name} value={name}>
                 {name}
               </option>
@@ -66,7 +99,7 @@ export function RecipeForm() {
           <select
             id="difficulty"
             name="difficulty"
-            defaultValue="easy"
+            defaultValue={recipe?.difficulty ?? "easy"}
             className={fieldClass}
           >
             <option value="easy">Easy</option>
@@ -83,6 +116,7 @@ export function RecipeForm() {
             name="cookingTime"
             type="number"
             min={0}
+            defaultValue={recipe?.cooking_time ?? ""}
             className={fieldClass}
           />
         </div>
@@ -96,6 +130,7 @@ export function RecipeForm() {
           name="ingredients"
           required
           placeholder="One ingredient per line"
+          defaultValue={recipe?.ingredients.join("\n") ?? ""}
           className={areaClass}
         />
       </div>
@@ -108,6 +143,7 @@ export function RecipeForm() {
           name="instructions"
           required
           placeholder="One step per line"
+          defaultValue={recipe?.instructions.join("\n") ?? ""}
           className={areaClass}
         />
       </div>
@@ -121,7 +157,7 @@ export function RecipeForm() {
         disabled={pending}
         className="h-12 rounded-full bg-accent px-5 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-60"
       >
-        {pending ? "Saving..." : "Save recipe"}
+        {pending ? "Saving..." : isEdit ? "Save changes" : "Save recipe"}
       </button>
     </form>
   );
