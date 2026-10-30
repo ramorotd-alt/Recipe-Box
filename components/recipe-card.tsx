@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RecipeSocialStats } from "@/components/recipe-social-stats";
 
 export type RecipeCardData = {
   id: string;
@@ -65,10 +66,10 @@ export function RecipeCard({
               .join(", ")}
           </p>
           <p className="text-sm">By {author}</p>
-          <p className="text-xs text-muted">
-            {likeCount} {likeCount === 1 ? "like" : "likes"} · {commentCount}{" "}
-            {commentCount === 1 ? "comment" : "comments"}
-          </p>
+          <RecipeSocialStats
+            likeCount={likeCount}
+            commentCount={commentCount}
+          />
         </div>
       </article>
     </Link>

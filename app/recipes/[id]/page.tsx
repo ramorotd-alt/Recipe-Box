@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { DeleteRecipeButton } from "@/components/delete-recipe-button";
 import { LikeButton } from "@/components/like-button";
 import { RecipeComments } from "@/components/recipe-comments";
+import { CommentCountLink } from "@/components/recipe-social-stats";
 import { authorLabel, loadAuthorsById } from "@/lib/recipes";
 import { createClient } from "@/lib/supabase/server";
 
@@ -115,6 +116,7 @@ export default async function RecipePage({
             liked={Boolean(likedRow)}
             likeCount={likeCount ?? 0}
           />
+          <CommentCountLink count={comments.length} />
           {isOwner ? (
             <>
               <Link
