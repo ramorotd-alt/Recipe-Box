@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Source_Serif_4 } from "next/font/google";
+import { Suspense } from "react";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
+import { SiteHeaderSkeleton } from "@/components/skeleton";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -27,7 +29,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${sourceSerif.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <SiteHeader />
+        <Suspense fallback={<SiteHeaderSkeleton />}>
+          <SiteHeader />
+        </Suspense>
         <div className="flex flex-1 flex-col">{children}</div>
         <SiteFooter />
       </body>
