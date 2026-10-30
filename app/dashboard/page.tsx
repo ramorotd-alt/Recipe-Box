@@ -2,7 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { RecipeCard } from "@/components/recipe-card";
-import { authorLabel, loadAuthorsById, type RecipeSummary } from "@/lib/recipes";
+import { RecipeSearchForm } from "@/components/recipe-search-form";
+import {
+  authorLabel,
+  loadAuthorsById,
+  recipeMatchesQuery,
+  type RecipeSummary,
+} from "@/lib/recipes";
 import {
   ensureProfile,
   profileErrorMessage,
@@ -13,7 +19,11 @@ export const metadata: Metadata = {
   title: "Dashboard - Recipe Box",
 };
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: PageProps<"/dashboard">) {
+  const params = await searchParams;
+  const query = typeof params.q === "string" ? params.q.trim() : "";
   const supabase = await createClient();
   const {
     data: { user },
@@ -44,12 +54,19 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false });
 
   const recipes = (data ?? []) as RecipeSummary[];
-  const mine = recipes.filter((recipe) => recipe.user_id === user.id);
-  const community = recipes.filter((recipe) => recipe.user_id !== user.id);
   const authorsById = await loadAuthorsById(
     supabase,
     recipes.map((recipe) => recipe.user_id),
   );
+  const visible = recipes.filter((recipe) =>
+    recipeMatchesQuery(
+      recipe,
+      query,
+      authorLabel(authorsById.get(recipe.user_id)),
+    ),
+  );
+  const mine = visible.filter((recipe) => recipe.user_id === user.id);
+  const community = visible.filter((recipe) => recipe.user_id !== user.id);
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-10 px-4 py-10 sm:px-6">
@@ -70,6 +87,8 @@ export default async function DashboardPage() {
         </Link>
       </section>
 
+      <RecipeSearchForm query={query} />
+
       {error ? (
         <p className="rounded-2xl border border-red-200 bg-red-50 px-6 py-8 text-red-800">
           Could not load recipes. {error.message}
@@ -80,7 +99,9 @@ export default async function DashboardPage() {
             <h2 className="font-serif text-2xl">Your recipes</h2>
             {mine.length === 0 ? (
               <p className="rounded-2xl border border-dashed border-border bg-card px-6 py-12 text-center text-muted">
-                You have not added a recipe yet.
+                {query
+                  ? `No recipes of yours match "${query}".`
+                  : "You have not added a recipe yet."}
               </p>
             ) : (
               <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -100,7 +121,9 @@ export default async function DashboardPage() {
             <h2 className="font-serif text-2xl">From other cooks</h2>
             {community.length === 0 ? (
               <p className="rounded-2xl border border-dashed border-border bg-card px-6 py-12 text-center text-muted">
-                No recipes from other cooks yet.
+                {query
+                  ? `No recipes from other cooks match "${query}".`
+                  : "No recipes from other cooks yet."}
               </p>
             ) : (
               <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

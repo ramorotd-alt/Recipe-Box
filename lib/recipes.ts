@@ -44,3 +44,27 @@ export function authorLabel(
 ) {
   return profile?.full_name || profile?.username || "A cook";
 }
+
+export function recipeMatchesQuery(
+  recipe: RecipeSummary,
+  query: string,
+  author: string,
+) {
+  const needle = query.trim().toLowerCase();
+  if (!needle) {
+    return true;
+  }
+
+  const haystack = [
+    recipe.title,
+    recipe.description,
+    recipe.category,
+    recipe.difficulty,
+    author,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return haystack.includes(needle);
+}
