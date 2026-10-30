@@ -6,6 +6,9 @@ import { RecipeSearchForm } from "@/components/recipe-search-form";
 import {
   authorLabel,
   loadAuthorsById,
+  RECIPE_CATEGORIES,
+  RECIPE_DIFFICULTIES,
+  recipeMatchesFilters,
   recipeMatchesQuery,
   type RecipeSummary,
 } from "@/lib/recipes";
@@ -24,6 +27,10 @@ export default async function DashboardPage({
 }: PageProps<"/dashboard">) {
   const params = await searchParams;
   const query = typeof params.q === "string" ? params.q.trim() : "";
+  const categoryParam =
+    typeof params.category === "string" ? params.category.trim() : "";
+  const difficultyParam =
+    typeof params.difficulty === "string" ? params.difficulty.trim() : "";
   const supabase = await createClient();
   const {
     data: { user },
@@ -58,13 +65,36 @@ export default async function DashboardPage({
     supabase,
     recipes.map((recipe) => recipe.user_id),
   );
-  const visible = recipes.filter((recipe) =>
-    recipeMatchesQuery(
-      recipe,
-      query,
-      authorLabel(authorsById.get(recipe.user_id)),
+  const extraCategories = [
+    ...new Set(
+      recipes
+        .map((recipe) => recipe.category)
+        .filter(
+          (name) =>
+            name &&
+            !RECIPE_CATEGORIES.includes(
+              name as (typeof RECIPE_CATEGORIES)[number],
+            ),
+        ),
     ),
-  );
+  ];
+  const category = extraCategories.includes(categoryParam) ||
+    RECIPE_CATEGORIES.includes(categoryParam as (typeof RECIPE_CATEGORIES)[number])
+    ? categoryParam
+    : undefined;
+  const difficulty = RECIPE_DIFFICULTIES.includes(
+    difficultyParam as (typeof RECIPE_DIFFICULTIES)[number],
+  )
+    ? difficultyParam
+    : undefined;
+  const hasFilters = Boolean(query || category || difficulty);
+  const visible = recipes.filter((recipe) => {
+    const author = authorLabel(authorsById.get(recipe.user_id));
+    return (
+      recipeMatchesQuery(recipe, query, author) &&
+      recipeMatchesFilters(recipe, { category, difficulty })
+    );
+  });
   const mine = visible.filter((recipe) => recipe.user_id === user.id);
   const community = visible.filter((recipe) => recipe.user_id !== user.id);
 
@@ -87,7 +117,12 @@ export default async function DashboardPage({
         </Link>
       </section>
 
-      <RecipeSearchForm query={query} />
+      <RecipeSearchForm
+        query={query}
+        category={category}
+        difficulty={difficulty}
+        extraCategories={extraCategories}
+      />
 
       {error ? (
         <p className="rounded-2xl border border-red-200 bg-red-50 px-6 py-8 text-red-800">
@@ -99,8 +134,8 @@ export default async function DashboardPage({
             <h2 className="font-serif text-2xl">Your recipes</h2>
             {mine.length === 0 ? (
               <p className="rounded-2xl border border-dashed border-border bg-card px-6 py-12 text-center text-muted">
-                {query
-                  ? `No recipes of yours match "${query}".`
+                {hasFilters
+                  ? "No recipes of yours match those filters."
                   : "You have not added a recipe yet."}
               </p>
             ) : (
@@ -121,8 +156,8 @@ export default async function DashboardPage({
             <h2 className="font-serif text-2xl">From other cooks</h2>
             {community.length === 0 ? (
               <p className="rounded-2xl border border-dashed border-border bg-card px-6 py-12 text-center text-muted">
-                {query
-                  ? `No recipes from other cooks match "${query}".`
+                {hasFilters
+                  ? "No recipes from other cooks match those filters."
                   : "No recipes from other cooks yet."}
               </p>
             ) : (

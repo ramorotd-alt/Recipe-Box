@@ -1,6 +1,17 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Recipe } from "@/lib/supabase/database.types";
 
+export const RECIPE_CATEGORIES = [
+  "Breakfast",
+  "Dinner",
+  "Vegan",
+  "Italian",
+  "Dessert",
+  "Quick",
+] as const;
+
+export const RECIPE_DIFFICULTIES = ["easy", "medium", "hard"] as const;
+
 export type RecipeSummary = Pick<
   Recipe,
   | "id"
@@ -67,4 +78,34 @@ export function recipeMatchesQuery(
     .toLowerCase();
 
   return haystack.includes(needle);
+}
+
+export function dashboardHref({
+  query,
+  category,
+  difficulty,
+}: {
+  query?: string;
+  category?: string;
+  difficulty?: string;
+}) {
+  const params = new URLSearchParams();
+  if (query) params.set("q", query);
+  if (category) params.set("category", category);
+  if (difficulty) params.set("difficulty", difficulty);
+  const search = params.toString();
+  return search ? `/dashboard?${search}` : "/dashboard";
+}
+
+export function recipeMatchesFilters(
+  recipe: RecipeSummary,
+  { category, difficulty }: { category?: string; difficulty?: string },
+) {
+  if (category && recipe.category !== category) {
+    return false;
+  }
+  if (difficulty && recipe.difficulty !== difficulty) {
+    return false;
+  }
+  return true;
 }
