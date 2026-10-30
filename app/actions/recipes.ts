@@ -97,6 +97,7 @@ export async function createRecipe(
   }
 
   revalidatePath("/dashboard");
+  revalidatePath("/profile");
   redirect(`/recipes/${data.id}`);
 }
 
@@ -140,6 +141,7 @@ export async function updateRecipe(
   }
 
   revalidatePath("/dashboard");
+  revalidatePath("/profile");
   revalidatePath(`/recipes/${recipeId}`);
   redirect(`/recipes/${recipeId}`);
 }
@@ -170,5 +172,6 @@ export async function deleteRecipe(formData: FormData) {
   }
 
   revalidatePath("/dashboard");
+  revalidatePath("/profile");
   redirect("/dashboard");
 }

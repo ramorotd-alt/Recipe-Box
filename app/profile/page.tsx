@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ProfileForm } from "@/components/profile-form";
+import { RecipeCard } from "@/components/recipe-card";
+import { authorLabel, type RecipeSummary } from "@/lib/recipes";
 import {
   ensureProfile,
   profileErrorMessage,
@@ -69,9 +72,20 @@ export default async function ProfilePage() {
     }
   }
 
+  const { data: recipeRows, error: recipesError } = await supabase
+    .from("recipes")
+    .select(
+      "id, user_id, title, description, cooking_time, difficulty, category, created_at",
+    )
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  const recipes = (recipeRows ?? []) as RecipeSummary[];
+  const author = authorLabel(profile ?? undefined);
+
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col px-4 py-10 sm:px-6">
-      <section className="mx-auto w-full max-w-xl rounded-2xl border border-border bg-card p-6 sm:p-8">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-10 px-4 py-10 sm:px-6">
+      <section className="mx-auto w-full max-w-xl rounded-2xl border border-border bg-card p-6 sm:p-8 sm:mx-0">
         <h1 className="font-serif text-3xl tracking-tight">Your profile</h1>
         <p className="mt-2 mb-6 text-muted">
           Signup fills in a starting name. Update it here whenever you like.
@@ -82,6 +96,35 @@ export default async function ProfilePage() {
           username={profile?.username ?? ""}
           bio={bio}
         />
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <h2 className="font-serif text-2xl">Your recipes</h2>
+          <Link
+            href="/recipes/new"
+            className="text-sm text-muted hover:text-foreground"
+          >
+            Add recipe
+          </Link>
+        </div>
+        {recipesError ? (
+          <p className="rounded-2xl border border-red-200 bg-red-50 px-6 py-8 text-red-800">
+            Could not load recipes. {recipesError.message}
+          </p>
+        ) : recipes.length === 0 ? (
+          <p className="rounded-2xl border border-dashed border-border bg-card px-6 py-12 text-center text-muted">
+            You have not added a recipe yet.
+          </p>
+        ) : (
+          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {recipes.map((recipe) => (
+              <li key={recipe.id}>
+                <RecipeCard recipe={recipe} author={author} />
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </main>
   );
