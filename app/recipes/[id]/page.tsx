@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { DeleteRecipeButton } from "@/components/delete-recipe-button";
-import { authorLabel } from "@/lib/recipes";
+import { LikeButton } from "@/components/like-button";
+import { RecipeComments } from "@/components/recipe-comments";
+import { authorLabel, loadAuthorsById } from "@/lib/recipes";
 import { createClient } from "@/lib/supabase/server";
 
 export async function generateMetadata({
@@ -55,6 +57,34 @@ export default async function RecipePage({
   const author = authorLabel(profile ?? undefined);
   const isOwner = recipe.user_id === user.id;
 
+  const [
+    { count: likeCount },
+    { data: likedRow },
+    { data: commentRows },
+  ] = await Promise.all([
+    supabase
+      .from("recipe_likes")
+      .select("*", { count: "exact", head: true })
+      .eq("recipe_id", recipe.id),
+    supabase
+      .from("recipe_likes")
+      .select("id")
+      .eq("recipe_id", recipe.id)
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("recipe_comments")
+      .select("id, body, created_at, updated_at, user_id")
+      .eq("recipe_id", recipe.id)
+      .order("created_at", { ascending: true }),
+  ]);
+
+  const comments = commentRows ?? [];
+  const commentAuthors = await loadAuthorsById(
+    supabase,
+    comments.map((comment) => comment.user_id),
+  );
+
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-10 sm:px-6">
       <p>
@@ -79,17 +109,24 @@ export default async function RecipePage({
             .filter(Boolean)
             .join(" | ")}
         </p>
-        {isOwner ? (
-          <div className="flex flex-wrap items-center gap-2 pt-1">
-            <Link
-              href={`/recipes/${recipe.id}/edit`}
-              className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover"
-            >
-              Edit
-            </Link>
-            <DeleteRecipeButton recipeId={recipe.id} />
-          </div>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          <LikeButton
+            recipeId={recipe.id}
+            liked={Boolean(likedRow)}
+            likeCount={likeCount ?? 0}
+          />
+          {isOwner ? (
+            <>
+              <Link
+                href={`/recipes/${recipe.id}/edit`}
+                className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover"
+              >
+                Edit
+              </Link>
+              <DeleteRecipeButton recipeId={recipe.id} />
+            </>
+          ) : null}
+        </div>
       </header>
 
       <section>
@@ -109,6 +146,15 @@ export default async function RecipePage({
           ))}
         </ol>
       </section>
+
+      <RecipeComments
+        recipeId={recipe.id}
+        currentUserId={user.id}
+        comments={comments.map((comment) => ({
+          ...comment,
+          author: authorLabel(commentAuthors.get(comment.user_id)),
+        }))}
+      />
     </main>
   );
 }

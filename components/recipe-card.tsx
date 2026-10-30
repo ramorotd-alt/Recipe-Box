@@ -28,9 +28,13 @@ function cardColor(id: string) {
 export function RecipeCard({
   recipe,
   author,
+  likeCount = 0,
+  commentCount = 0,
 }: {
   recipe: RecipeCardData;
   author: string;
+  likeCount?: number;
+  commentCount?: number;
 }) {
   return (
     <Link href={`/recipes/${recipe.id}`} className="block h-full">
@@ -61,6 +65,10 @@ export function RecipeCard({
               .join(", ")}
           </p>
           <p className="text-sm">By {author}</p>
+          <p className="text-xs text-muted">
+            {likeCount} {likeCount === 1 ? "like" : "likes"} · {commentCount}{" "}
+            {commentCount === 1 ? "comment" : "comments"}
+          </p>
         </div>
       </article>
     </Link>

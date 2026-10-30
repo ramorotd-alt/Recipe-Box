@@ -97,6 +97,49 @@ export function dashboardHref({
   return search ? `/dashboard?${search}` : "/dashboard";
 }
 
+export type SocialCounts = {
+  likes: number;
+  comments: number;
+};
+
+export async function loadSocialCounts(
+  supabase: SupabaseClient<Database>,
+  recipeIds: string[],
+) {
+  const counts = new Map<string, SocialCounts>();
+  const uniqueIds = [...new Set(recipeIds.filter(Boolean))];
+
+  for (const id of uniqueIds) {
+    counts.set(id, { likes: 0, comments: 0 });
+  }
+
+  if (uniqueIds.length === 0) {
+    return counts;
+  }
+
+  const [{ data: likes }, { data: comments }] = await Promise.all([
+    supabase.from("recipe_likes").select("recipe_id").in("recipe_id", uniqueIds),
+    supabase
+      .from("recipe_comments")
+      .select("recipe_id")
+      .in("recipe_id", uniqueIds),
+  ]);
+
+  for (const like of likes ?? []) {
+    const current = counts.get(like.recipe_id) ?? { likes: 0, comments: 0 };
+    current.likes += 1;
+    counts.set(like.recipe_id, current);
+  }
+
+  for (const comment of comments ?? []) {
+    const current = counts.get(comment.recipe_id) ?? { likes: 0, comments: 0 };
+    current.comments += 1;
+    counts.set(comment.recipe_id, current);
+  }
+
+  return counts;
+}
+
 export function recipeMatchesFilters(
   recipe: RecipeSummary,
   { category, difficulty }: { category?: string; difficulty?: string },

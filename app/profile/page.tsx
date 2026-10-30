@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ProfileForm } from "@/components/profile-form";
 import { RecipeCard } from "@/components/recipe-card";
-import { authorLabel, type RecipeSummary } from "@/lib/recipes";
+import { authorLabel, loadSocialCounts, type RecipeSummary } from "@/lib/recipes";
 import {
   ensureProfile,
   profileErrorMessage,
@@ -82,6 +82,10 @@ export default async function ProfilePage() {
 
   const recipes = (recipeRows ?? []) as RecipeSummary[];
   const author = authorLabel(profile ?? undefined);
+  const socialById = await loadSocialCounts(
+    supabase,
+    recipes.map((recipe) => recipe.id),
+  );
 
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-10 px-4 py-10 sm:px-6">
@@ -120,7 +124,12 @@ export default async function ProfilePage() {
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {recipes.map((recipe) => (
               <li key={recipe.id}>
-                <RecipeCard recipe={recipe} author={author} />
+                <RecipeCard
+                  recipe={recipe}
+                  author={author}
+                  likeCount={socialById.get(recipe.id)?.likes ?? 0}
+                  commentCount={socialById.get(recipe.id)?.comments ?? 0}
+                />
               </li>
             ))}
           </ul>

@@ -20,6 +20,22 @@ export type Recipe = {
   instructions: string[];
 };
 
+export type RecipeLike = {
+  id: string;
+  created_at: string;
+  user_id: string;
+  recipe_id: string;
+};
+
+export type RecipeComment = {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  recipe_id: string;
+  body: string;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -75,6 +91,72 @@ export type Database = {
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      recipe_likes: {
+        Row: RecipeLike;
+        Insert: {
+          id?: string;
+          created_at?: string;
+          user_id: string;
+          recipe_id: string;
+        };
+        Update: {
+          id?: string;
+          created_at?: string;
+          user_id?: string;
+          recipe_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "recipe_likes_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "recipe_likes_recipe_id_fkey";
+            columns: ["recipe_id"];
+            isOneToOne: false;
+            referencedRelation: "recipes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      recipe_comments: {
+        Row: RecipeComment;
+        Insert: {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+          user_id: string;
+          recipe_id: string;
+          body: string;
+        };
+        Update: {
+          id?: string;
+          created_at?: string;
+          updated_at?: string;
+          user_id?: string;
+          recipe_id?: string;
+          body?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "recipe_comments_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "recipe_comments_recipe_id_fkey";
+            columns: ["recipe_id"];
+            isOneToOne: false;
+            referencedRelation: "recipes";
             referencedColumns: ["id"];
           },
         ];

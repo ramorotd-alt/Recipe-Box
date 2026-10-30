@@ -124,6 +124,11 @@ export function RecipeDetailSkeleton() {
         <Skeleton className="h-4 w-5/6 rounded-full" />
         <Skeleton className="h-4 w-2/3 rounded-full" />
       </div>
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-8 w-36 rounded-full" />
+        <Skeleton className="h-24 w-full rounded-2xl" />
+        <Skeleton className="h-16 w-full rounded-2xl" />
+      </div>
     </main>
   );
 }

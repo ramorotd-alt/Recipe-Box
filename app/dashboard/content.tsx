@@ -5,6 +5,7 @@ import { RecipeSearchForm } from "@/components/recipe-search-form";
 import {
   authorLabel,
   loadAuthorsById,
+  loadSocialCounts,
   RECIPE_CATEGORIES,
   RECIPE_DIFFICULTIES,
   recipeMatchesFilters,
@@ -56,6 +57,10 @@ export async function DashboardContent({
   const authorsById = await loadAuthorsById(
     supabase,
     recipes.map((recipe) => recipe.user_id),
+  );
+  const socialById = await loadSocialCounts(
+    supabase,
+    recipes.map((recipe) => recipe.id),
   );
   const extraCategories = [
     ...new Set(
@@ -123,6 +128,8 @@ export async function DashboardContent({
                     <RecipeCard
                       recipe={recipe}
                       author={authorLabel(authorsById.get(recipe.user_id))}
+                      likeCount={socialById.get(recipe.id)?.likes ?? 0}
+                      commentCount={socialById.get(recipe.id)?.comments ?? 0}
                     />
                   </li>
                 ))}
@@ -145,6 +152,8 @@ export async function DashboardContent({
                     <RecipeCard
                       recipe={recipe}
                       author={authorLabel(authorsById.get(recipe.user_id))}
+                      likeCount={socialById.get(recipe.id)?.likes ?? 0}
+                      commentCount={socialById.get(recipe.id)?.comments ?? 0}
                     />
                   </li>
                 ))}
