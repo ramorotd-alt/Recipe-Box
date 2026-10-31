@@ -19,7 +19,29 @@ function field(formData: FormData, name: string) {
 
 async function appOrigin() {
   const headerStore = await headers();
-  return headerStore.get("origin") ?? "http://localhost:3000";
+  const origin = headerStore.get("origin");
+  if (origin) {
+    return origin;
+  }
+
+  const host = (
+    headerStore.get("x-forwarded-host") ??
+    headerStore.get("host") ??
+    ""
+  )
+    .split(",")[0]
+    .trim();
+  const proto = (
+    headerStore.get("x-forwarded-proto") ?? "http"
+  )
+    .split(",")[0]
+    .trim();
+
+  if (host) {
+    return `${proto}://${host}`;
+  }
+
+  return "http://localhost:3000";
 }
 
 export async function login(
