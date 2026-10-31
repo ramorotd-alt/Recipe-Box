@@ -3,7 +3,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ProfileForm } from "@/components/profile-form";
 import { RecipeCard } from "@/components/recipe-card";
-import { authorLabel, loadSocialCounts, type RecipeSummary } from "@/lib/recipes";
+import { SavedRecipeGrid } from "@/components/saved-recipe-grid";
+import {
+  authorLabel,
+  loadAuthorsById,
+  loadSavedRecipes,
+  loadSocialCounts,
+  type RecipeSummary,
+} from "@/lib/recipes";
 import {
   ensureProfile,
   profileErrorMessage,
@@ -82,9 +89,17 @@ export default async function ProfilePage() {
 
   const recipes = (recipeRows ?? []) as RecipeSummary[];
   const author = authorLabel(profile ?? undefined);
-  const socialById = await loadSocialCounts(
+  const { recipes: savedRecipes, error: savedError } = await loadSavedRecipes(
     supabase,
-    recipes.map((recipe) => recipe.id),
+    user.id,
+  );
+  const socialById = await loadSocialCounts(supabase, [
+    ...recipes.map((recipe) => recipe.id),
+    ...savedRecipes.map((recipe) => recipe.id),
+  ]);
+  const savedAuthorsById = await loadAuthorsById(
+    supabase,
+    savedRecipes.map((recipe) => recipe.user_id),
   );
 
   return (
@@ -105,12 +120,20 @@ export default async function ProfilePage() {
       <section className="flex flex-col gap-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <h2 className="font-serif text-2xl">Your recipes</h2>
-          <Link
-            href="/recipes/new"
-            className="text-sm text-muted hover:text-foreground"
-          >
-            Add recipe
-          </Link>
+          <div className="flex flex-wrap items-center gap-4">
+            <Link
+              href="/profile/saved"
+              className="text-sm text-muted hover:text-foreground"
+            >
+              Saved recipes
+            </Link>
+            <Link
+              href="/recipes/new"
+              className="text-sm text-muted hover:text-foreground"
+            >
+              Add recipe
+            </Link>
+          </div>
         </div>
         {recipesError ? (
           <p className="rounded-2xl border border-red-200 bg-red-50 px-6 py-8 text-red-800">
@@ -133,6 +156,29 @@ export default async function ProfilePage() {
               </li>
             ))}
           </ul>
+        )}
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <h2 className="font-serif text-2xl">Saved recipes</h2>
+          <Link
+            href="/profile/saved"
+            className="text-sm text-muted hover:text-foreground"
+          >
+            View saved page
+          </Link>
+        </div>
+        {savedError ? (
+          <p className="rounded-2xl border border-red-200 bg-red-50 px-6 py-8 text-red-800">
+            Could not load saved recipes. {savedError.message}
+          </p>
+        ) : (
+          <SavedRecipeGrid
+            recipes={savedRecipes}
+            authorsById={savedAuthorsById}
+            socialById={socialById}
+          />
         )}
       </section>
     </main>

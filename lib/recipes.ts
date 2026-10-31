@@ -140,6 +140,47 @@ export async function loadSocialCounts(
   return counts;
 }
 
+const RECIPE_SUMMARY_COLUMNS =
+  "id, user_id, title, description, cooking_time, difficulty, category, created_at";
+
+export async function loadSavedRecipes(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+) {
+  const { data: likes, error: likesError } = await supabase
+    .from("recipe_likes")
+    .select("recipe_id, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (likesError) {
+    return { recipes: [] as RecipeSummary[], error: likesError };
+  }
+
+  const ids = (likes ?? []).map((like) => like.recipe_id);
+  if (ids.length === 0) {
+    return { recipes: [] as RecipeSummary[], error: null };
+  }
+
+  const { data: recipeRows, error } = await supabase
+    .from("recipes")
+    .select(RECIPE_SUMMARY_COLUMNS)
+    .in("id", ids);
+
+  if (error) {
+    return { recipes: [] as RecipeSummary[], error };
+  }
+
+  const byId = new Map(
+    ((recipeRows ?? []) as RecipeSummary[]).map((recipe) => [recipe.id, recipe]),
+  );
+  const recipes = ids
+    .map((id) => byId.get(id))
+    .filter((recipe): recipe is RecipeSummary => Boolean(recipe));
+
+  return { recipes, error: null };
+}
+
 export function recipeMatchesFilters(
   recipe: RecipeSummary,
   { category, difficulty }: { category?: string; difficulty?: string },

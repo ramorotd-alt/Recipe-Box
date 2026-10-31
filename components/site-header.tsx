@@ -32,6 +32,12 @@ export async function SiteHeader() {
               >
                 Profile
               </Link>
+              <Link
+                href="/profile/saved"
+                className="rounded-full px-3 py-2 text-muted hover:text-foreground"
+              >
+                Saved
+              </Link>
               <form action={logout}>
                 <button
                   type="submit"

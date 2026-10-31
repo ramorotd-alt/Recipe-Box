@@ -142,6 +142,7 @@ export async function updateRecipe(
 
   revalidatePath("/dashboard");
   revalidatePath("/profile");
+  revalidatePath("/profile/saved");
   revalidatePath(`/recipes/${recipeId}`);
   redirect(`/recipes/${recipeId}`);
 }
@@ -173,5 +174,6 @@ export async function deleteRecipe(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/profile");
+  revalidatePath("/profile/saved");
   redirect("/dashboard");
 }

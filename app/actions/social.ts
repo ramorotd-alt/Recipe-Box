@@ -32,6 +32,7 @@ function revalidateRecipe(recipeId: string) {
   revalidatePath(`/recipes/${recipeId}`);
   revalidatePath("/dashboard");
   revalidatePath("/profile");
+  revalidatePath("/profile/saved");
 }
 
 export async function toggleRecipeLike(formData: FormData) {
